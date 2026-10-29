@@ -19,7 +19,7 @@ function render(state) {
   $("toggle").setAttribute("aria-pressed", String(connected && !searching));
   $("toggleLabel").textContent = searching ? "Connecting…" : connected ? "Disconnect" : "Connect";
   $("status").textContent =
-    autoStatus || (connected && active ? `Connected via ${active.auto ? `free server ${active.host}` : active.name || active.host}` : "Not connected");
+    autoStatus || (connected && active ? `Connected via ${active.auto ? `free server ${active.host}` : active.tor ? "Tor (Russia)" : active.name || active.host}` : "Not connected");
   $("newServer").hidden = !(connected && activeId === AUTO_ID) || searching;
 
   const blocked = levelOfControl === "controlled_by_other_extensions" || levelOfControl === "not_controllable";
@@ -61,7 +61,7 @@ async function init() {
 
   // Live progress while the background searches for a free server.
   chrome.storage.onChanged.addListener(async (changes) => {
-    if (changes.autoStatus) render({ ...(await getState()), searching: Boolean(changes.autoStatus.newValue) });
+    if (changes.autoStatus || changes.connected) render(await send({ type: "status" }));
   });
 
   $("server").addEventListener("change", async () => {

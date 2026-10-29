@@ -1,5 +1,8 @@
-import { getState, setState, AUTO_ID } from "./storage.js";
-import { findFreeProxy, isSearching } from "./free-proxy.js";
+import { getState, setState, AUTO_ID, TOR_ID } from "./storage.js";
+import { findFreeProxy, isSearching as isFinding } from "./free-proxy.js";
+import { startTor, stopTor, isTorStarting, isTorRunning, onTorExit } from "./tor.js";
+
+const isSearching = () => isFinding() || isTorStarting();
 
 // Requests we've already answered with credentials, so a wrong password
 // fails instead of looping forever.
@@ -10,6 +13,12 @@ async function applyProxy() {
   const server = servers.find((s) => s.id === activeId);
   await syncTimezone(Boolean(connected && server?.host && geo.timezone !== false));
 
+  if (!(connected && server?.tor)) stopTor();
+  else if (!isTorRunning() && !isTorStarting()) {
+    // Chrome restarted or the worker woke up: bring Tor back first.
+    startTor(() => setProxy(server, bypassList)).then((ok) => ok || applyProxy());
+  }
+
   if (!connected || !server?.host) {
     await chrome.proxy.settings.clear({ scope: "regular" });
     await chrome.privacy.network.webRTCIPHandlingPolicy.clear({});
@@ -17,7 +26,14 @@ async function applyProxy() {
     return;
   }
 
-  await chrome.proxy.settings.set({
+  await setProxy(server, bypassList);
+  // Stop WebRTC from revealing your real IP around the proxy.
+  await chrome.privacy.network.webRTCIPHandlingPolicy.set({ value: "disable_non_proxied_udp" });
+  await updateBadge(true);
+}
+
+function setProxy(server, bypassList) {
+  return chrome.proxy.settings.set({
     scope: "regular",
     value: {
       mode: "fixed_servers",
@@ -27,9 +43,6 @@ async function applyProxy() {
       }
     }
   });
-  // Stop WebRTC from revealing your real IP around the proxy.
-  await chrome.privacy.network.webRTCIPHandlingPolicy.set({ value: "disable_non_proxied_udp" });
-  await updateBadge(true);
 }
 
 // The timezone override has to run before page scripts, so it is registered
@@ -91,10 +104,46 @@ chrome.proxy.onProxyError.addListener((err) => {
   chrome.action.setBadgeBackgroundColor({ color: "#dc2626" });
 });
 
-chrome.runtime.onStartup.addListener(applyProxy);
-chrome.runtime.onInstalled.addListener(async () => {
+onTorExit(async (error) => {
+  console.warn("Tor exited:", error);
+  await setState({ connected: false, autoStatus: "" });
+  await applyProxy();
+  chrome.action.setBadgeText({ text: "OFF" });
+  chrome.action.setBadgeBackgroundColor({ color: "#dc2626" });
+});
+
+async function connect(id) {
+  const { servers, bypassList } = await getState();
+  const server = servers.find((s) => s.id === id);
+  if (id === AUTO_ID) {
+    await setState({ activeId: AUTO_ID });
+    await findFreeProxy();
+  } else if (server?.tor) {
+    stopTor();
+    await setState({ activeId: id, connected: true });
+    await startTor(() => setProxy(server, bypassList));
+  } else {
+    await setState({ activeId: id, connected: true, autoStatus: "" });
+  }
+  await applyProxy();
+}
+
+chrome.runtime.onStartup.addListener(async () => {
+  const { autoConnect, activeId } = await getState();
+  await setState({ autoStatus: "" });
+  if (autoConnect) await connect(activeId);
+  else await applyProxy();
+});
+
+chrome.runtime.onInstalled.addListener(async ({ reason, previousVersion }) => {
+  const state = await getState();
+  // Make Tor the default for anyone updating from before it existed.
+  if (reason === "update" && previousVersion && previousVersion.localeCompare("0.5.0", undefined, { numeric: true }) < 0) {
+    state.activeId = TOR_ID;
+    state.connected = false;
+  }
   // Persist defaults so content scripts can read them straight from storage.
-  await setState(await getState());
+  await setState({ ...state, autoStatus: "" });
   await applyProxy();
 });
 
@@ -102,20 +151,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
     switch (msg.type) {
       case "connect":
-        if (msg.id === AUTO_ID) {
-          await setState({ activeId: AUTO_ID });
-          await findFreeProxy();
-        } else {
-          await setState({ activeId: msg.id, connected: true, autoStatus: "" });
-        }
-        await applyProxy();
+        await connect(msg.id);
         break;
       case "newServer":
         await findFreeProxy(true);
         await applyProxy();
         break;
       case "disconnect":
-        await setState({ connected: false });
+        await setState({ connected: false, autoStatus: "" });
         await applyProxy();
         break;
       case "reapply":

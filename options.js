@@ -18,7 +18,8 @@ async function render() {
     meta.children[1].textContent = s.auto
       ? `Picks a free public proxy in Russia when you connect${s.host ? ` · last used ${s.host}` : ""}${live}`
       : `${s.scheme}://${s.host}:${s.port}${s.username ? " · auth" : ""}${live}`;
-    if (s.auto) {
+    if (s.tor) meta.children[1].textContent = `Starts Tor in the background and exits in Russia (needs the helper, see README)${live}`;
+    if (s.auto || s.tor) {
       li.append(meta);
       list.append(li);
       continue;
@@ -35,7 +36,8 @@ async function render() {
 
   $("bypass").value = bypassList.join("\n");
 
-  const { geo } = await getState();
+  const { geo, autoConnect } = await getState();
+  $("autoConnect").checked = autoConnect;
   $("geoEnabled").checked = geo.enabled;
   $("geoTimezone").checked = geo.timezone !== false;
   $("geoLabel").value = geo.label;
@@ -93,6 +95,8 @@ for (const [button, kind] of [["torBrowser", "browser"], ["torService", "service
     render();
   });
 }
+
+$("autoConnect").addEventListener("change", () => setState({ autoConnect: $("autoConnect").checked }));
 
 $("cancel").addEventListener("click", () => fillForm(null));
 $("scheme").addEventListener("change", updateSocksHint);

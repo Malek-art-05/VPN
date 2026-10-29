@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Simple VPN",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Appear to be in Russia: one click connects Chrome through a free Russian proxy, with Moscow location and timezone.",
   "permissions": [
     "proxy",
@@ -9,7 +9,8 @@
     "privacy",
     "scripting",
     "webRequest",
-    "webRequestAuthProvider"
+    "webRequestAuthProvider",
+    "nativeMessaging"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -58,5 +59,6 @@
       "all_frames": true,
       "match_origin_as_fallback": true
     }
-  ]
+  ],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjer8l+80Fwcz3IUusUn4OIpO/F6ZqKq5P+Kco+jMgbvd73sAslNJFbJDKcJF51ZXNv6oX3jg30QFusl4S3Rc++HMfRLvdcXCU4dY+C/umqE435/KIk3lIEKc1A0tUMdzE2Rfj0uXYAcF6Zq0j1E8Z+o7VrAVihvb+Tus11nj/I+CcGy35WfDSNvEPFZfBf6qGz0cFfIWLaUON/9RHiHP4RoojdBPVzxT+dwLmZwGb6VKVMOxbCUb50qf++TjVX8/H3DiGNamkNnZFaL1x/fDxrwiTZc8b8m5pnSQit43F9j85MifB7X2SUiHyYZF+UGRWjIn/b1G106jDPSzZ43yzwIDAQAB"
 }

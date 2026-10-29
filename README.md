@@ -15,17 +15,40 @@ It only covers Chrome. Other apps on your computer keep using your normal connec
 2. Click **Load unpacked** and pick this `vpn-extension` folder.
 3. Pin the extension and click its icon.
 
-## Quick start (nothing else to install)
+## Tor Russia (automatic): recommended
 
-Click the extension icon, leave **Free Russian server (automatic)** selected and
-click **Connect**. It downloads a list of free public proxies in Russia, tests
+The default server, **Tor Russia (automatic)**, starts Tor in the background
+when you click Connect and shuts it down when you disconnect or close Chrome.
+No Tor window ever opens. It uses the Tor engine that comes with Tor Browser.
+You set it up once:
+
+1. Install Tor Browser from https://www.torproject.org/download/ (you never
+   need to open it again after that).
+2. Install the helper that lets Chrome start Tor:
+   - **Windows:** open the extension folder, go to `helper\windows`, and
+     double-click `install.bat`.
+   - **Mac / Linux:** in a terminal, run `bash helper/mac-linux/install.sh`
+     from the extension folder.
+3. Restart Chrome. Click the extension, then **Connect**. The first start takes
+   10 to 60 seconds while Tor finds a Russian route.
+
+The extension also reconnects by itself when Chrome starts. You can turn that
+off in Options under Startup.
+
+To remove the helper, run `helper\windows\uninstall.bat` or
+`bash helper/mac-linux/install.sh --uninstall`. Tor's log is in
+`%LOCALAPPDATA%\SimpleVPN\tor.log` on Windows or `~/.simplevpn/tor.log` on Mac/Linux.
+
+## Free Russian server (no install, less reliable)
+
+Pick **Free Russian server (automatic)** in the popup and click **Connect**. It downloads a list of free public proxies in Russia, tests
 them one by one, and connects to the first one whose traffic really exits in
 Russia. That usually takes a few seconds to a minute.
 
 Free public proxies are run by strangers. They come and go, can be slow, and
 could read any page that isn't HTTPS (the padlock sites are still encrypted).
 If one gets slow, click **Try another server** in the popup. For something
-steadier, use Tor (below) or your own server.
+steadier, use Tor Russia (above) or your own server.
 
 ## Add a server
 
@@ -43,7 +66,7 @@ occasionally but are slow, short-lived, and can read or alter unencrypted traffi
 
 Then hit **Connect** in the popup and use **Check my IP** to confirm.
 
-## Free Russian IP with Tor
+## Tor Browser by hand (without the helper)
 
 Tor is free. By default it picks a random country, so you tell it to exit
 only through Russia, then point the extension at it.
@@ -114,5 +137,7 @@ override.
 | `options.*` | Manage servers, location and bypass list |
 | `geo-main.js`, `geo-bridge.js` | Replace `navigator.geolocation` while connected |
 | `tz-spoof.js` | Moscow timezone for pages, registered only while connected |
+| `tor.js` | Starts and stops Tor through the helper |
+| `helper/` | One-time installers for the helper that runs Tor hidden |
 | `free-proxy.js` | Finds and tests free Russian proxies for the automatic server |
 | `storage.js` | Shared settings helpers |
