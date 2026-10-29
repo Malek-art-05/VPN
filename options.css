@@ -1,0 +1,24 @@
+:root { --bg: #f9fafb; --card: #fff; --fg: #111827; --muted: #6b7280; --border: #e5e7eb; --accent: #2563eb; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0b1120; --card: #111827; --fg: #f3f4f6; --muted: #9ca3af; --border: #374151; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, sans-serif; }
+main { max-width: 640px; margin: 32px auto; padding: 0 16px; }
+h1 { font-size: 22px; } h2 { font-size: 16px; margin-top: 32px; }
+ul { list-style: none; padding: 0; margin: 0; }
+li { display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+li .meta { flex: 1; } li .sub { color: var(--muted); font-size: 12px; }
+li:empty, ul:empty::after { content: "No servers yet."; color: var(--muted); }
+form, textarea { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+input, select, textarea { width: 100%; margin-top: 4px; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--fg); font: inherit; }
+textarea { font-family: ui-monospace, monospace; }
+.row { display: flex; gap: 12px; } .row .grow { flex: 1; }
+.hint { color: var(--muted); font-size: 12px; }
+.actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+button { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--fg); cursor: pointer; font: inherit; }
+button[type="submit"], #saveBypass { background: var(--accent); border-color: var(--accent); color: #fff; }
+label.check { display: flex; gap: 8px; align-items: center; color: var(--fg); font-size: 14px; }
+label.check input { width: auto; margin: 0; }
+#geoForm button[type="submit"] { background: var(--accent); border-color: var(--accent); color: #fff; }

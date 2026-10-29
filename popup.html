@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>Simple VPN</h1>
+    <a href="#" id="settings" title="Manage servers">⚙</a>
+  </header>
+
+  <button id="toggle" class="toggle" aria-pressed="false">
+    <span class="dot"></span>
+    <span id="toggleLabel">Connect</span>
+  </button>
+  <p id="status" class="status">Not connected</p>
+
+  <label for="server">Server</label>
+  <select id="server"></select>
+
+  <div class="ip">
+    <button id="checkIp" class="link">Check my IP</button>
+    <span id="ip"></span>
+  </div>
+
+  <p id="warning" class="warning" hidden></p>
+  <p id="empty" class="empty" hidden>No servers yet. <a href="#" id="addTor">Use Tor Browser (free)</a> or <a href="#" id="addServer">add your own</a>.</p>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Simple VPN servers</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <h1>Servers</h1>
+    <ul id="list"></ul>
+
+    <h2>Free Russian IP with Tor</h2>
+    <p class="hint">Set Tor up to exit through Russia first (see the README), then add the matching preset.</p>
+    <div class="actions">
+      <button id="torBrowser">Add Tor Browser preset (port 9150)</button>
+      <button id="torService">Add Tor service preset (port 9050)</button>
+    </div>
+
+    <h2 id="formTitle">Add a server</h2>
+    <form id="form">
+      <input type="hidden" id="id">
+      <label>Name <input id="name" placeholder="Frankfurt"></label>
+      <div class="row">
+        <label>Type
+          <select id="scheme">
+            <option value="http">HTTP</option>
+            <option value="https">HTTPS</option>
+            <option value="socks5">SOCKS5</option>
+            <option value="socks4">SOCKS4</option>
+          </select>
+        </label>
+        <label class="grow">Host <input id="host" required placeholder="proxy.example.com"></label>
+        <label>Port <input id="port" type="number" min="1" max="65535" required placeholder="8080"></label>
+      </div>
+      <div class="row" id="authRow">
+        <label class="grow">Username <input id="username" autocomplete="off"></label>
+        <label class="grow">Password <input id="password" type="password" autocomplete="new-password"></label>
+      </div>
+      <p class="hint" id="socksHint" hidden>Chrome doesn't support username/password for SOCKS proxies. Use an HTTP or HTTPS proxy if your server needs a login.</p>
+      <div class="actions">
+        <button type="submit" id="save">Add server</button>
+        <button type="button" id="cancel" hidden>Cancel</button>
+      </div>
+    </form>
+
+    <h2>Location</h2>
+    <form id="geoForm">
+      <label class="check"><input type="checkbox" id="geoEnabled"> Report a fake GPS location to websites while connected</label>
+      <div class="row">
+        <label class="grow">Place <input id="geoLabel" placeholder="Moscow, Russia"></label>
+        <label>Latitude <input id="geoLat" type="number" step="any" min="-90" max="90" required></label>
+        <label>Longitude <input id="geoLon" type="number" step="any" min="-180" max="180" required></label>
+      </div>
+      <p class="hint">Sites mostly locate you by IP, which comes from your proxy server. This covers sites that ask the browser for GPS location too. Reload open tabs after changing it.</p>
+      <div class="actions"><button type="submit">Save location</button> <span id="geoSaved" class="hint"></span></div>
+    </form>
+
+    <h2>Bypass list</h2>
+    <p class="hint">Hosts that skip the proxy, one per line. <code>&lt;local&gt;</code> covers plain hostnames like <code>intranet</code>.</p>
+    <textarea id="bypass" rows="5"></textarea>
+    <div class="actions"><button id="saveBypass">Save bypass list</button> <span id="saved" class="hint"></span></div>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>
