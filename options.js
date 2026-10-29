@@ -1,4 +1,4 @@
-import { getState, setState, newId, addTorPreset } from "./storage.js";
+import { getState, setState, newId, addTorPreset, AUTO_ID } from "./storage.js";
 
 const $ = (id) => document.getElementById(id);
 const fields = ["id", "name", "scheme", "host", "port", "username", "password"];
@@ -15,7 +15,14 @@ async function render() {
     const live = connected && s.id === activeId ? " · connected" : "";
     meta.innerHTML = `<div></div><div class="sub"></div>`;
     meta.children[0].textContent = s.name || s.host;
-    meta.children[1].textContent = `${s.scheme}://${s.host}:${s.port}${s.username ? " · auth" : ""}${live}`;
+    meta.children[1].textContent = s.auto
+      ? `Picks a free public proxy in Russia when you connect${s.host ? ` · last used ${s.host}` : ""}${live}`
+      : `${s.scheme}://${s.host}:${s.port}${s.username ? " · auth" : ""}${live}`;
+    if (s.auto) {
+      li.append(meta);
+      list.append(li);
+      continue;
+    }
 
     const edit = Object.assign(document.createElement("button"), { textContent: "Edit" });
     edit.onclick = () => fillForm(s);
@@ -53,7 +60,7 @@ function updateSocksHint() {
 async function removeServer(id) {
   const { servers, activeId } = await getState();
   const patch = { servers: servers.filter((s) => s.id !== id) };
-  if (id === activeId) Object.assign(patch, { activeId: null, connected: false });
+  if (id === activeId) Object.assign(patch, { activeId: AUTO_ID, connected: false });
   await setState(patch);
   await chrome.runtime.sendMessage({ type: "reapply" });
   render();

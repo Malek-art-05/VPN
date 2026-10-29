@@ -15,6 +15,18 @@ It only covers Chrome. Other apps on your computer keep using your normal connec
 2. Click **Load unpacked** and pick this `vpn-extension` folder.
 3. Pin the extension and click its icon.
 
+## Quick start (nothing else to install)
+
+Click the extension icon, leave **Free Russian server (automatic)** selected and
+click **Connect**. It downloads a list of free public proxies in Russia, tests
+them one by one, and connects to the first one whose traffic really exits in
+Russia. That usually takes a few seconds to a minute.
+
+Free public proxies are run by strangers. They come and go, can be slow, and
+could read any page that isn't HTTPS (the padlock sites are still encrypted).
+If one gets slow, click **Try another server** in the popup. For something
+steadier, use Tor (below) or your own server.
+
 ## Add a server
 
 Click the gear in the popup (or right-click the icon → Options) and enter:
@@ -102,4 +114,5 @@ override.
 | `options.*` | Manage servers, location and bypass list |
 | `geo-main.js`, `geo-bridge.js` | Replace `navigator.geolocation` while connected |
 | `tz-spoof.js` | Moscow timezone for pages, registered only while connected |
+| `free-proxy.js` | Finds and tests free Russian proxies for the automatic server |
 | `storage.js` | Shared settings helpers |

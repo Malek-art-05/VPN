@@ -1,7 +1,12 @@
 // Shared helpers for reading and writing extension state.
+export const AUTO_ID = "auto-ru";
+// Built-in entry whose host/port are filled in by free-proxy.js.
+const AUTO_SERVER = { id: AUTO_ID, name: "Free Russian server (automatic)", auto: true, scheme: "http", host: "", port: 0 };
+
 export const DEFAULTS = {
-  servers: [],            // [{ id, name, scheme, host, port, username, password }]
-  activeId: null,
+  servers: [AUTO_SERVER],  // [{ id, name, scheme, host, port, username, password, auto? }]
+  activeId: AUTO_ID,
+  autoStatus: "",          // progress text while searching for a free server
   connected: false,
   bypassList: ["localhost", "127.0.0.1", "<local>"],
   // Report this position to sites that ask for your location while connected.
@@ -27,7 +32,9 @@ export async function addTorPreset(kind) {
 
 export async function getState() {
   const stored = await chrome.storage.local.get(DEFAULTS);
-  return { ...DEFAULTS, ...stored };
+  const state = { ...DEFAULTS, ...stored };
+  if (!state.servers.some((s) => s.id === AUTO_ID)) state.servers = [AUTO_SERVER, ...state.servers];
+  return state;
 }
 
 export function setState(patch) {

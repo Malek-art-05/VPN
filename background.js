@@ -1,4 +1,5 @@
-import { getState, setState } from "./storage.js";
+import { getState, setState, AUTO_ID } from "./storage.js";
+import { findFreeProxy, isSearching } from "./free-proxy.js";
 
 // Requests we've already answered with credentials, so a wrong password
 // fails instead of looping forever.
@@ -7,9 +8,9 @@ const authAttempts = new Set();
 async function applyProxy() {
   const { servers, activeId, connected, bypassList, geo } = await getState();
   const server = servers.find((s) => s.id === activeId);
-  await syncTimezone(Boolean(connected && server && geo.timezone !== false));
+  await syncTimezone(Boolean(connected && server?.host && geo.timezone !== false));
 
-  if (!connected || !server) {
+  if (!connected || !server?.host) {
     await chrome.proxy.settings.clear({ scope: "regular" });
     await chrome.privacy.network.webRTCIPHandlingPolicy.clear({});
     await updateBadge(false);
@@ -85,6 +86,7 @@ chrome.webRequest.onErrorOccurred.addListener(forget, { urls: ["<all_urls>"] });
 
 chrome.proxy.onProxyError.addListener((err) => {
   console.warn("Proxy error:", err.error, err.details);
+  if (isSearching()) return; // expected while testing free servers
   chrome.action.setBadgeText({ text: "ERR" });
   chrome.action.setBadgeBackgroundColor({ color: "#dc2626" });
 });
@@ -100,7 +102,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
     switch (msg.type) {
       case "connect":
-        await setState({ activeId: msg.id, connected: true });
+        if (msg.id === AUTO_ID) {
+          await setState({ activeId: AUTO_ID });
+          await findFreeProxy();
+        } else {
+          await setState({ activeId: msg.id, connected: true, autoStatus: "" });
+        }
+        await applyProxy();
+        break;
+      case "newServer":
+        await findFreeProxy(true);
         await applyProxy();
         break;
       case "disconnect":
@@ -108,10 +119,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         await applyProxy();
         break;
       case "reapply":
-        await applyProxy();
+        // Don't undo the test proxy while a free-server search is running.
+        if (!isSearching()) await applyProxy();
         break;
     }
-    sendResponse({ ...(await getState()), levelOfControl: await controlLevel() });
+    sendResponse({ ...(await getState()), searching: isSearching(), levelOfControl: await controlLevel() });
   })().catch((e) => sendResponse({ error: e.message }));
   return true; // keep the channel open for the async response
 });

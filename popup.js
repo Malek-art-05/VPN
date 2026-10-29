@@ -1,10 +1,10 @@
-import { getState, addTorPreset } from "./storage.js";
+import { getState, addTorPreset, AUTO_ID } from "./storage.js";
 
 const $ = (id) => document.getElementById(id);
 const send = (msg) => chrome.runtime.sendMessage(msg);
 
 function render(state) {
-  const { servers, activeId, connected, levelOfControl } = state;
+  const { servers, activeId, connected, levelOfControl, searching, autoStatus } = state;
   const active = servers.find((s) => s.id === activeId);
 
   $("server").innerHTML = "";
@@ -14,10 +14,13 @@ function render(state) {
   }
 
   $("empty").hidden = servers.length > 0;
-  $("toggle").disabled = servers.length === 0;
-  $("toggle").setAttribute("aria-pressed", String(connected));
-  $("toggleLabel").textContent = connected ? "Disconnect" : "Connect";
-  $("status").textContent = connected && active ? `Connected via ${active.name || active.host}` : "Not connected";
+  $("toggle").disabled = servers.length === 0 || searching;
+  $("server").disabled = searching;
+  $("toggle").setAttribute("aria-pressed", String(connected && !searching));
+  $("toggleLabel").textContent = searching ? "Connecting…" : connected ? "Disconnect" : "Connect";
+  $("status").textContent =
+    autoStatus || (connected && active ? `Connected via ${active.auto ? `free server ${active.host}` : active.name || active.host}` : "Not connected");
+  $("newServer").hidden = !(connected && activeId === AUTO_ID) || searching;
 
   const blocked = levelOfControl === "controlled_by_other_extensions" || levelOfControl === "not_controllable";
   $("warning").hidden = !blocked;
@@ -35,7 +38,7 @@ async function lookupIp() {
     const res = await fetch("https://api.ipify.org?format=json", { cache: "no-store" });
     return (await res.json()).ip;
   } catch {
-    return "Could not reach the internet. Is Tor running?";
+    return "Could not reach the internet through this server. Try another one.";
   }
 }
 
@@ -44,13 +47,29 @@ async function init() {
 
   $("toggle").addEventListener("click", async () => {
     const { connected } = await getState();
-    render(await send(connected ? { type: "disconnect" } : { type: "connect", id: $("server").value }));
     $("ip").textContent = "";
+    const msg = connected ? { type: "disconnect" } : { type: "connect", id: $("server").value };
+    if (msg.type === "connect") render({ ...(await getState()), searching: msg.id === AUTO_ID });
+    render(await send(msg));
+  });
+
+  $("newServer").addEventListener("click", async () => {
+    $("ip").textContent = "";
+    render({ ...(await getState()), searching: true });
+    render(await send({ type: "newServer" }));
+  });
+
+  // Live progress while the background searches for a free server.
+  chrome.storage.onChanged.addListener(async (changes) => {
+    if (changes.autoStatus) render({ ...(await getState()), searching: Boolean(changes.autoStatus.newValue) });
   });
 
   $("server").addEventListener("change", async () => {
     const { connected } = await getState();
-    if (connected) render(await send({ type: "connect", id: $("server").value }));
+    if (connected) {
+      if ($("server").value === AUTO_ID) render({ ...(await getState()), searching: true });
+      render(await send({ type: "connect", id: $("server").value }));
+    }
     else await chrome.storage.local.set({ activeId: $("server").value });
   });
 
