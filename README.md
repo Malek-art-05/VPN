@@ -4,7 +4,8 @@ Routes Chrome's traffic through a proxy server you choose, so websites see the
 server's IP and country instead of yours. While connected it also:
 
 - stops WebRTC from leaking your real IP, and
-- reports a fake GPS location (Moscow by default) to sites that ask the browser for it.
+- reports a fake GPS location (Moscow by default) to sites that ask the browser for it, and
+- makes websites see Moscow time (UTC+3) instead of your computer's timezone.
 
 It only covers Chrome. Other apps on your computer keep using your normal connection.
 
@@ -86,6 +87,11 @@ The Location section in Options controls the fake GPS position. Sites mostly
 judge location by IP (from the proxy), but this covers map and weather sites
 that ask the browser directly. Reload open tabs after connecting or changing it.
 
+The Moscow time option makes JavaScript dates and `Intl` report Europe/Moscow,
+so a site comparing your clock to your IP's country sees a match. It doesn't
+reach Web Workers, and a determined fingerprinting script can still spot the
+override.
+
 ## Files
 
 | File | What it does |
@@ -95,4 +101,5 @@ that ask the browser directly. Reload open tabs after connecting or changing it.
 | `popup.*` | Connect/disconnect button, server picker, IP check |
 | `options.*` | Manage servers, location and bypass list |
 | `geo-main.js`, `geo-bridge.js` | Replace `navigator.geolocation` while connected |
+| `tz-spoof.js` | Moscow timezone for pages, registered only while connected |
 | `storage.js` | Shared settings helpers |

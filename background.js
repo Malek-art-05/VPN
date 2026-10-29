@@ -5,8 +5,9 @@ import { getState, setState } from "./storage.js";
 const authAttempts = new Set();
 
 async function applyProxy() {
-  const { servers, activeId, connected, bypassList } = await getState();
+  const { servers, activeId, connected, bypassList, geo } = await getState();
   const server = servers.find((s) => s.id === activeId);
+  await syncTimezone(Boolean(connected && server && geo.timezone !== false));
 
   if (!connected || !server) {
     await chrome.proxy.settings.clear({ scope: "regular" });
@@ -28,6 +29,24 @@ async function applyProxy() {
   // Stop WebRTC from revealing your real IP around the proxy.
   await chrome.privacy.network.webRTCIPHandlingPolicy.set({ value: "disable_non_proxied_udp" });
   await updateBadge(true);
+}
+
+// The timezone override has to run before page scripts, so it is registered
+// as a content script only while connected instead of checking state at runtime.
+const TZ_SCRIPT = {
+  id: "tz-spoof",
+  js: ["tz-spoof.js"],
+  matches: ["<all_urls>"],
+  runAt: "document_start",
+  allFrames: true,
+  matchOriginAsFallback: true,
+  world: "MAIN"
+};
+
+async function syncTimezone(on) {
+  const registered = (await chrome.scripting.getRegisteredContentScripts({ ids: [TZ_SCRIPT.id] })).length > 0;
+  if (on && !registered) await chrome.scripting.registerContentScripts([TZ_SCRIPT]);
+  if (!on && registered) await chrome.scripting.unregisterContentScripts({ ids: [TZ_SCRIPT.id] });
 }
 
 async function updateBadge(on) {

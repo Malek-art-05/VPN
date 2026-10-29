@@ -30,6 +30,7 @@ async function render() {
 
   const { geo } = await getState();
   $("geoEnabled").checked = geo.enabled;
+  $("geoTimezone").checked = geo.timezone !== false;
   $("geoLabel").value = geo.label;
   $("geoLat").value = geo.latitude;
   $("geoLon").value = geo.longitude;
@@ -102,11 +103,13 @@ $("geoForm").addEventListener("submit", async (e) => {
   await setState({
     geo: {
       enabled: $("geoEnabled").checked,
+      timezone: $("geoTimezone").checked,
       label: $("geoLabel").value.trim(),
       latitude: Number($("geoLat").value),
       longitude: Number($("geoLon").value)
     }
   });
+  await chrome.runtime.sendMessage({ type: "reapply" });
   $("geoSaved").textContent = "Saved";
   setTimeout(() => ($("geoSaved").textContent = ""), 1500);
 });

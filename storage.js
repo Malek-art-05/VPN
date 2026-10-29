@@ -5,7 +5,7 @@ export const DEFAULTS = {
   connected: false,
   bypassList: ["localhost", "127.0.0.1", "<local>"],
   // Report this position to sites that ask for your location while connected.
-  geo: { enabled: true, label: "Moscow, Russia", latitude: 55.7558, longitude: 37.6173 }
+  geo: { enabled: true, label: "Moscow, Russia", latitude: 55.7558, longitude: 37.6173, timezone: true }
 };
 
 // Tor listens on 9150 when Tor Browser is open, or 9050 when run as a service.

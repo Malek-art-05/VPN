@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Simple VPN",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Route Chrome traffic through your own HTTP, HTTPS or SOCKS proxy servers with one click.",
   "permissions": [
     "proxy",
     "storage",
     "privacy",
+    "scripting",
     "webRequest",
     "webRequestAuthProvider"
   ],
